@@ -1,4 +1,4 @@
-﻿<xml xmlns="http://www.w3.org/1999/xhtml" collection="false">
+no﻿<xml xmlns="http://www.w3.org/1999/xhtml" collection="false">
   <variables>
     <variable type="" id="ITiw_xSBxuYP6qNF)F|h">Max Loss Amount</variable>
     <variable type="" id="oQ~TQa?Dq78]MM},5;*l">Expected Profit</variable>
@@ -308,8 +308,7 @@
                 <value name="MESSAGE">
                   <block type="text_join" id="8^7)EO6)T_9|WwM|s|[k">
                     <mutation items="2"></mutation>
-                    <value name="ADD0">
-                      <block type="text" id="GJj/xRmSK_ZF5r!V}c=2">
+                    <value name="ADD0">          <block type="text" id="GJj/xRmSK_ZF5r!V}c=2">
                         <field name="TEXT">Total Profit: </field>
                       </block>
                     </value>
@@ -340,30 +339,5 @@
                     <statement name="ELSE">
                       <block type="text_print" id="hd*./[=`KU$On/64|NI?">
                         <value name="TEXT">
-                          <shadow type="text" id="kqlrIk.GO.^}hI,PoUV)">
-                            <field name="TEXT">abc</field>
-                          </shadow>
-                          <block type="text_join" id="L_qRS=Quk3Y0K|?hhwN+">
-                            <mutation items="2"></mutation>
-                            <value name="ADD0">
-                              <block type="text" id="kW=JN].m/XEZsnX3A!;J">
-                                <field name="TEXT">Done! Total profit: </field>
-                              </block>
-                            </value>
-                            <value name="ADD1">
-                              <block type="total_profit" id="7hzGUrk%.[5rS(WLI!21"></block>
-                            </value>
-                          </block>
-                        </value>
-                      </block>
-                    </statement>
-                  </block>
-                </next>
-              </block>
-            </next>
-          </block>
-        </next>
-      </block>
-    </statement>
-  </block>
-</xml>
+                          <shadow type="text" id=
+            
