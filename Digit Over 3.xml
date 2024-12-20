@@ -974,4 +974,51 @@
       </block>
     </statement>
   </block>
-</xml>
+</xml>import pandas as pd
+import numpy as np
+import talib
+import matplotlib.pyplot as plt
+
+# Load your data (replace 'data.csv' with your data file)
+# Data should include 'Date', 'Open', 'High', 'Low', 'Close', 'Volume'
+data = pd.read_csv('data.csv')
+data['Date'] = pd.to_datetime(data['Date'])
+data.set_index('Date', inplace=True)
+
+# Calculate Indicators
+data['EMA_50'] = talib.EMA(data['Close'], timeperiod=50)
+data['EMA_200'] = talib.EMA(data['Close'], timeperiod=200)
+data['RSI'] = talib.RSI(data['Close'], timeperiod=14)
+data['Upper_Band'], data['Middle_Band'], data['Lower_Band'] = talib.BBANDS(data['Close'], timeperiod=20, nbdevup=2, nbdevdn=2, matype=0)
+data['MACD'], data['MACD_Signal'], _ = talib.MACD(data['Close'], fastperiod=12, slowperiod=26, signalperiod=9)
+
+# Define Conditions
+data['Buy_Signal'] = (
+    (data['EMA_50'] > data['EMA_200']) &  # Bullish trend
+    (data['RSI'] > 50) & (data['RSI'] < 70) &  # Momentum confirmation
+    (data['Close'] > data['Middle_Band']) &  # Bollinger Band confirmation
+    (data['MACD'] > data['MACD_Signal'])  # MACD crossover confirmation
+)
+
+data['Sell_Signal'] = (
+    (data['EMA_50'] < data['EMA_200']) &  # Bearish trend
+    (data['RSI'] < 50) & (data['RSI'] > 30) &  # Momentum confirmation
+    (data['Close'] < data['Middle_Band']) &  # Bollinger Band confirmation
+    (data['MACD'] < data['MACD_Signal'])  # MACD crossover confirmation
+)
+
+# Plot the Results
+plt.figure(figsize=(14, 7))
+plt.plot(data['Close'], label='Close Price', alpha=0.5)
+plt.plot(data['EMA_50'], label='50 EMA', alpha=0.8)
+plt.plot(data['EMA_200'], label='200 EMA', alpha=0.8)
+plt.scatter(data.index, data['Close'][data['Buy_Signal']], label='Buy Signal', marker='^', color='green', alpha=1)
+plt.scatter(data.index, data['Close'][data['Sell_Signal']], label='Sell Signal', marker='v', color='red', alpha=1)
+plt.title('Combined Indicator Strategy')
+plt.xlabel('Date')
+plt.ylabel('Price')
+plt.legend()
+plt.show()
+
+# Save results
+data.to_csv('output_signals.csv')
