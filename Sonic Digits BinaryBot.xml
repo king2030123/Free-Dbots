@@ -80,10 +80,7 @@
                               </block>
                             </value>
                           </block>
-                        </value>
-                        <value name="B">
-                          <block type="math_number" id="psi|_~m:-d;=+]ecAfFW">
-                            <field name="NUM">0</field>
+              
                           </block>
                         </value>
                       </block>
