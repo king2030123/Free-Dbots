@@ -33,7 +33,117 @@
               <block type="math_number" id="pGL%0jCRlD;R_i-Q:?jz">
                 <field name="NUM">10</field>
               </block>
-            </value>
+            </value>import MetaTrader5 as mt5
+import pandas as pd
+import numpy as np
+import time
+
+# Connect to MetaTrader 5
+if not mt5.initialize():
+    print("MT5 Initialization failed")
+    quit()
+
+# Define Trading Parameters
+symbol = "EURUSD"
+timeframe = mt5.TIMEFRAME_M5  # 5-minute chart
+lot = 0.1
+stop_loss = 50
+take_profit = 100
+
+# Fetch Historical Data
+def get_data(symbol, timeframe, n=100):
+    rates = mt5.copy_rates_from_pos(symbol, timeframe, 0, n)
+    df = pd.DataFrame(rates)
+    df['time'] = pd.to_datetime(df['time'], unit='s')
+    return df
+
+# Calculate Indicators
+def calculate_indicators(df):
+    # Moving Average (50 period)
+    df['MA50'] = df['close'].rolling(window=50).mean()
+    
+    # MACD
+    df['EMA12'] = df['close'].ewm(span=12, adjust=False).mean()
+    df['EMA26'] = df['close'].ewm(span=26, adjust=False).mean()
+    df['MACD'] = df['EMA12'] - df['EMA26']
+    df['Signal_Line'] = df['MACD'].ewm(span=9, adjust=False).mean()
+    
+    # RSI (14 period)
+    delta = df['close'].diff()
+    gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+    df['RSI'] = 100 - (100 / (1 + (gain / loss)))
+    
+    # Williams %R (14 period)
+    df['WR'] = (df['high'].rolling(14).max() - df['close']) / (df['high'].rolling(14).max() - df['low'].rolling(14).min()) * -100
+    
+    # Stochastic Oscillator (14,3,3)
+    df['14-high'] = df['high'].rolling(14).max()
+    df['14-low'] = df['low'].rolling(14).min()
+    df['%K'] = (df['close'] - df['14-low']) / (df['14-high'] - df['14-low']) * 100
+    df['%D'] = df['%K'].rolling(3).mean()
+    
+    return df
+
+# Trading Strategy
+def trading_signal(df):
+    latest = df.iloc[-1]
+    
+    # Buy Condition
+    if (latest['MACD'] > latest['Signal_Line'] and
+        latest['RSI'] < 70 and
+        latest['%K'] > latest['%D'] and
+        latest['WR'] > -20 and
+        latest['close'] > latest['MA50']):
+        return 'buy'
+    
+    # Sell Condition
+    if (latest['MACD'] < latest['Signal_Line'] and
+        latest['RSI'] > 30 and
+        latest['%K'] < latest['%D'] and
+        latest['WR'] < -80 and
+        latest['close'] < latest['MA50']):
+        return 'sell'
+    
+    return 'hold'
+
+# Execute Order
+def place_order(signal):
+    if signal == 'buy':
+        order_type = mt5.ORDER_TYPE_BUY
+    elif signal == 'sell':
+        order_type = mt5.ORDER_TYPE_SELL
+    else:
+        return
+    
+    request = {
+        "action": mt5.TRADE_ACTION_DEAL,
+        "symbol": symbol,
+        "volume": lot,
+        "type": order_type,
+        "price": mt5.symbol_info_tick(symbol).ask if signal == 'buy' else mt5.symbol_info_tick(symbol).bid,
+        "sl": stop_loss,
+        "tp": take_profit,
+        "deviation": 20,
+        "magic": 123456,
+        "comment": "AI Bot Trade",
+        "type_time": mt5.ORDER_TIME_GTC,
+        "type_filling": mt5.ORDER_FILLING_IOC,
+    }
+    result = mt5.order_send(request)
+    print(result)
+
+# Main Loop
+while True:
+    data = get_data(symbol, timeframe, n=100)
+    data = calculate_indicators(data)
+    signal = trading_signal(data)
+    print(f"Signal: {signal}")
+    place_order(signal)
+    time.sleep(60)  # Wait for 1 minute before next iteration
+
+# Shutdown MT5 Connection
+mt5.shutdown()
             <next>
               <block type="variables_set" id="cG;6qVzC4dU[J9h%wYdK">
                 <field name="VAR" id="[:*sc!{S6gRB/,L5Q9?)" variabletype="">Win Amount</field>
