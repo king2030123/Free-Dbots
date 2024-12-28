@@ -76,7 +76,47 @@
           </block>
         </value>
       </block>
-    </statement>
+    </statement>short_window=12, long_window=26, signal_window=9):
+    # Calculate short-term and long-term EMAs
+    data['EMA12'] = data['Close'].ewm(span=short_window, min_periods=1, adjust=False).mean()
+    data['EMA26'] = data['Close'].ewm(span=long_window, min_periods=1, adjust=False).mean()
+    
+    # Calculate MACD and Signal Line
+    data['MACD'] = data['EMA12'] - data['EMA26']
+    data['Signal_Line'] = data['MACD'].ewm(span=signal_window, min_periods=1, adjust=False).mean()
+    
+    # Calculate Histogram
+    data['Histogram'] = data['MACD'] - data['Signal_Line']
+    
+    return data
+
+# Generate Buy/Sell Signals
+def generate_signals(data):
+    data['Signal'] = np.where((data['MACD'] > data['Signal_Line']) & (data['MACD'].shift(1) <= data['Signal_Line'].shift(1)), 'BUY',
+                     np.where((data['MACD'] < data['Signal_Line']) & (data['MACD'].shift(1) >= data['Signal_Line'].shift(1)), 'SELL', 'HOLD'))
+    return data
+
+# Example Data (Replace with live data feed)
+data = pd.DataFrame({
+    'Close': [100, 102, 104, 103, 105, 107, 106, 108, 110, 109, 111, 113]
+})
+
+# Calculate MACD and Signals
+data = calculate_macd(data)
+data = generate_signals(data)
+
+# Display DataFrame
+print(data)
+
+# Plotting the MACD Indicator
+plt.figure(figsize=(12, 6))
+plt.plot(data['MACD'], label='MACD', color='b')
+plt.plot(data['Signal_Line'], label='Signal Line', color='r')
+plt.bar(data.index, data['Histogram'], label='Histogram', color='g')
+plt.legend()
+plt.title('MACD Indicator')
+plt.show()
+
   </block>
   <block type="before_purchase" id="strategy" x="348" y="-90">
     <statement name="BEFOREPURCHASE_STACK">
