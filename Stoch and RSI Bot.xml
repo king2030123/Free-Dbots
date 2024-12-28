@@ -124,7 +124,47 @@
                       </block>
                     </value>
                   </block>
-                </value>
+                </value>Calculate MACD
+def calculate_macd(data):
+    data['EMA12'] = data['Close'].ewm(span=12, min_periods=0, adjust=False).mean()
+    data['EMA26'] = data['Close'].ewm(span=26, min_periods=0, adjust=False).mean()
+    data['MACD'] = data['EMA12'] - data['EMA26']
+    data['Signal'] = data['MACD'].ewm(span=9, min_periods=0, adjust=False).mean()
+    data['Histogram'] = data['MACD'] - data['Signal']
+    return data
+
+# Trading Signal
+def generate_signals(data):
+    data['Signal_Type'] = np.where(data['MACD'] > data['Signal'], 'Buy', 'Sell')
+    data['Cross_Over'] = data['Signal_Type'].ne(data['Signal_Type'].shift(1))
+    return data
+
+# Main Bot Logic
+def run_macd_bot():
+    data = get_price_data()
+    data = calculate_macd(data)
+    data = generate_signals(data)
+    
+    for index, row in data.iterrows():
+        if row['Cross_Over']:
+            if row['Signal_Type'] == 'Buy':
+                print(f"Signal: CALL at price {row['Close']}")
+                # Place a CALL trade with broker API
+            elif row['Signal_Type'] == 'Sell':
+                print(f"Signal: PUT at price {row['Close']}")
+                # Place a PUT trade with broker API
+
+    # Plot the MACD for visualization
+    plt.figure(figsize=(10, 6))
+    plt.plot(data['Close'], label='Close Price')
+    plt.plot(data['MACD'], label='MACD', color='blue')
+    plt.plot(data['Signal'], label='Signal', color='red')
+    plt.legend()
+    plt.show()
+
+# Run the Bot
+if __name__ == "__main__":
+    run_macd_bot()
                 <next>
                   <block type="variables_set" id="x^dKV).m-X,_`wO3_P|B">
                     <field name="VAR" id="^Jm)?(EFDhSb/ZPPiU8@" variabletype="">STOCH-70</field>
