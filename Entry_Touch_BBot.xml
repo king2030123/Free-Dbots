@@ -1663,6 +1663,43 @@
         <field name="VAR" id="*@kJCQ1CO)Y5?a?v7^cN" variabletype="">tsDOWN</field>
       </block>
     </value>
+    # Parameters
+rsi_period = 14
+macd_fast = 12
+macd_slow = 26
+macd_signal = 9
+ema_period = 21
+
+# RSI Calculation
+def calculate_rsi(data, period):
+    delta = data['Close'].diff()
+    gain = np.where(delta > 0, delta, 0)
+    loss = np.where(delta < 0, -delta, 0)
+
+    avg_gain = pd.Series(gain).rolling(window=period).mean()
+    avg_loss = pd.Series(loss).rolling(window=period).mean()
+
+    rs = avg_gain / avg_loss
+    rsi = 100 - (100 / (1 + rs))
+    return rsi
+
+data['RSI'] = calculate_rsi(data, rsi_period)
+
+# MACD Calculation
+data['EMA_Fast'] = data['Close'].ewm(span=macd_fast, adjust=False).mean()
+data['EMA_Slow'] = data['Close'].ewm(span=macd_slow, adjust=False).mean()
+data['MACD_Line'] = data['EMA_Fast'] - data['EMA_Slow']
+data['Signal_Line'] = data['MACD_Line'].ewm(span=macd_signal, adjust=False).mean()
+
+# EMA Calculation
+data['EMA'] = data['Close'].ewm(span=ema_period, adjust=False).mean()
+
+# Entry and Exit Signals
+data['Buy_Signal'] = (data['RSI'] < 30) & (data['MACD_Line'] > data['Signal_Line']) & (data['Close'] > data['EMA'])
+data['Sell_Signal'] = (data['RSI'] > 70) & (data['MACD_Line'] < data['Signal_Line']) & (data['Close'] < data['EMA'])
+
+# Output Signals
+print(data[['Close', 'RSI', 'MACD_Line', 'Signal_Line', 'EMA', 'Buy_Signal', 'Sell_Signal']])
   </block>
   <block type="tick_analysis" id="jldc@vMDcvkwj1$EZzcL" collapsed="true" x="0" y="948">
     <statement name="TICKANALYSIS_STACK">
